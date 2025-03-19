@@ -2,7 +2,7 @@ namespace ConsoleApp1;
 
 public abstract class Contener
 {
-    
+
     private int _weightOfStuff;
     private int _heigth;
     private int _weightOfBox;
@@ -21,7 +21,7 @@ public abstract class Contener
         _counter++;
         _maxWeight = maxWeight;
     }
-
+    
     public void Empty()
     {
         _weightOfStuff = 0;
