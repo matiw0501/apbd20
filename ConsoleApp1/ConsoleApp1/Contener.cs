@@ -22,12 +22,16 @@ public abstract class Contener
         _maxWeight = maxWeight;
     }
     
-    public void Empty()
+    public virtual void Empty()
     {
         _weightOfStuff = 0;
     }
+    public virtual void Empty(int percent)
+    {
+        _weightOfStuff *= percent/100;
+    }
 
-    public void Load(int weightToLoad)
+    public virtual void  Load(int weightToLoad)
     {
         if (_maxWeight < _weightOfStuff + weightToLoad)
             throw new OverfillException();
@@ -35,5 +39,40 @@ public abstract class Contener
         _weightOfStuff += weightToLoad;
     }
 
+    public int getWeightOfStuff()
+    {
+        return _weightOfStuff;
+    }
+
+    public int getHeigth()
+    {
+        return _heigth;
+    }
+
+    public int getWeightOfBox()
+    {
+        return _weightOfBox;
+    }
+
+    public int getBoxDeepth()
+    {
+        return _boxDeepth;
+    }
+
+    public String getSerialNumber()
+    {
+        return _serialNumber;
+    }
+
+    public int getMaxWeight()
+    {
+        return _maxWeight;
+    }
+
+    public int getCounter()
+    {
+        return _counter;
+    }
+    
 
 }
