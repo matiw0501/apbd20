@@ -7,153 +7,134 @@ namespace APBD_example_test1_2025.Services;
 
 public class DbService : IDbService
 {
-    private readonly string _connectionString =
-        "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=APBD;Integrated Security=True;";
+    private readonly string _connectionString;
+
     public DbService(IConfiguration configuration)
     {
-        // _connectionString = configuration.GetConnectionString("Default") ?? string.Empty;
-        _connectionString =
-            "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=APBD;Integrated Security=True;";
+        // _connectionString = configuration.GetConnectionString("Default")!;
+        _connectionString = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=APBD;Integrated Security=True;";
     }
-    
-    public async Task<CustomerRentalHistoryDto> GetRentalsForCustomerByIdAsync(int customerId)
+
+    public async Task<AppointmentDto> GetAppointmentByIdAsync(int id)
     {
-        var query =
-            @"SELECT first_name, last_name, r.rental_id, rental_date, return_date, s.name, ri.price_at_rental, m.title
-            FROM Rental r
-            JOIN Customer c ON r.customer_id = c.customer_id
-            JOIN Status s ON r.status_id = s.status_id
-            JOIN Rental_Item ri ON ri.rental_id = r.rental_id
-            JOIN Movie m ON m.movie_id = ri.movie_id
-            WHERE r.customer_id = @customerId;";
-        
-        await using SqlConnection connection = new SqlConnection(_connectionString);
-        await using SqlCommand command = new SqlCommand();
-        
-        command.Connection = connection;
-        command.CommandText = query;
-        await connection.OpenAsync();
-        
-        command.Parameters.AddWithValue("@customerId", customerId);
-        var reader = await command.ExecuteReaderAsync();
-        
-        CustomerRentalHistoryDto? rentals = null;
-        
+        const string query = @"
+            SELECT a.date, 
+                   p.first_name, p.last_name, p.date_of_birth,
+                   d.doctor_id, d.pwz,
+                   s.name, aps.service_fee
+            FROM Appointment a
+            JOIN Patient p ON a.patient_id = p.patient_id
+            JOIN Doctor d ON a.doctor_id = d.doctor_id
+            JOIN Appointment_Service aps ON aps.appoitment_id = a.appoitment_id
+            JOIN Service s ON aps.service_id = s.service_id
+            WHERE a.appoitment_id = @id";
+
+        await using var conn = new SqlConnection(_connectionString);
+        await using var cmd = new SqlCommand(query, conn);
+        cmd.Parameters.AddWithValue("@id", id);
+        await conn.OpenAsync();
+
+        var reader = await cmd.ExecuteReaderAsync();
+
+        AppointmentDto? appointment = null;
         while (await reader.ReadAsync())
         {
-            if (rentals is null)
+            if (appointment is null)
             {
-                rentals = new CustomerRentalHistoryDto
+                appointment = new AppointmentDto
                 {
-                    FirstName = reader.GetString(0),
-                    LastName = reader.GetString(1),
-                    Rentals = new List<RentalDetailsDto>()
+                    Date = reader.GetDateTime(0),
+                    Patient = new PatientDto
+                    {
+                        FirstName = reader.GetString(1),
+                        LastName = reader.GetString(2),
+                        DateOfBirth = reader.GetDateTime(3)
+                    },
+                    Doctor = new DoctorDto
+                    {
+                        DoctorId = reader.GetInt32(4),
+                        Pwz = reader.GetString(5)
+                    },
+                    AppointmentServices = new List<ServiceDto>()
                 };
             }
-            
-            int rentalId = reader.GetInt32(2);
-            
-            var rental = rentals.Rentals.FirstOrDefault(e => e.Id.Equals(rentalId));
-            if (rental is null)
+
+            appointment.AppointmentServices.Add(new ServiceDto
             {
-                rental = new RentalDetailsDto()
-                {
-                    Id = rentalId,
-                    RentalDate = reader.GetDateTime(3),
-                    ReturnDate = await reader.IsDBNullAsync(4) ? null : reader.GetDateTime(4),
-                    Status = reader.GetString(5),
-                    Movies = new List<RentedMovieDto>()
-                };
-                rentals.Rentals.Add(rental);
-            }
-            rental.Movies.Add(new RentedMovieDto()
-            {
-                Title = reader.GetString(7),
-                PriceAtRental = reader.GetDecimal(6),
+                Name = reader.GetString(6),
+                ServiceFee = reader.GetDecimal(7)
             });
-            
-        }       
-        
-        if (rentals is null)
-        {
-            throw new NotFoundException("No rentals found for the specified customer.");
         }
-        
-        return rentals;
+
+        if (appointment is null)
+            throw new NotFoundException("Appoitment not found.");
+
+        return appointment;
     }
 
-    public async Task AddNewRentalAsync(int customerId, CreateRentalRequestDto rentalRequest)
+    public async Task AddAppointmentAsync(CreateAppointmentDto dto)
     {
-        await using SqlConnection connection = new SqlConnection(_connectionString);
+        await using var connection = new SqlConnection(_connectionString);
         await using SqlCommand command = new SqlCommand();
-        
         command.Connection = connection;
         await connection.OpenAsync();
-        
+
         DbTransaction transaction = await connection.BeginTransactionAsync();
         command.Transaction = transaction as SqlTransaction;
-
         try
         {
             command.Parameters.Clear();
-            command.CommandText = "SELECT 1 FROM Customer WHERE customer_id = @IdCustomer;";
-            command.Parameters.AddWithValue("@IdCustomer", customerId);
-                
-            var customerIdRes = await command.ExecuteScalarAsync();
-            if(customerIdRes is null)
-                throw new NotFoundException($"Customer with ID - {customerId} - not found.");
+            command.CommandText = "SELECT 1 FROM Appointment WHERE appoitment_id = @id";
+            command.Parameters.AddWithValue("@id", dto.AppoitmentId);
+            if (await command.ExecuteScalarAsync() is not null)
+                throw new ConflictException("Appoitment already exists.");
             
             command.Parameters.Clear();
-            command.CommandText = 
-                @"INSERT INTO Rental
-            VALUES(@IdRental, @RentalDate, @ReturnDate, @CustomerId, @StatusId);";
-        
-            command.Parameters.AddWithValue("@IdRental", rentalRequest.Id);
-            command.Parameters.AddWithValue("@RentalDate", rentalRequest.RentalDate);
-            command.Parameters.AddWithValue("@ReturnDate", DBNull.Value);
-            command.Parameters.AddWithValue("@CustomerId", customerId);
-            command.Parameters.AddWithValue("@StatusId", 1);
-
-            try
-            {
-                await command.ExecuteNonQueryAsync();
-            }
-            catch (Exception e)
-            {
-                throw new ConflictException("A rental with the same ID already exists.");
-            }
+            command.CommandText = "SELECT 1 FROM Patient WHERE patient_id = @pid";
+            command.Parameters.AddWithValue("@pId", dto.PatientId);
+            if (await command.ExecuteScalarAsync() is null)
+                throw new NotFoundException("Patient not found.");
             
-
-            foreach (var movie in rentalRequest.Movies)
+            command.Parameters.Clear();
+            command.CommandText = "SELECT doctor_id FROM Doctor WHERE pwz = @pwz";
+            command.Parameters.AddWithValue("@pwz", dto.Pwz);
+            var doctorId = await command.ExecuteScalarAsync();
+            if (doctorId is null)
+                throw new NotFoundException("Doctor not found.");
+            
+            command.Parameters.Clear();
+            command.CommandText = @"
+                INSERT INTO Appointment (appoitment_id, date, patient_id, doctor_id)
+                VALUES (@aid, GETDATE(), @pid, @did)";
+            command.Parameters.AddWithValue("@aId", dto.AppoitmentId);
+            command.Parameters.AddWithValue("@pId", dto.PatientId);
+            command.Parameters.AddWithValue("@dId", doctorId);
+            await command.ExecuteNonQueryAsync();
+            
+            foreach (var service in dto.Services)
             {
                 command.Parameters.Clear();
-                command.CommandText = "SELECT movie_id FROM Movie WHERE Title = @MovieTitle;";
-                command.Parameters.AddWithValue("@MovieTitle", movie.Title);
-                
-                var movieId = await command.ExecuteScalarAsync();
-                if(movieId is null)
-                    throw new NotFoundException($"Movie - {movie.Title} - not found.");
-                
+                command.CommandText = "SELECT service_id FROM Service WHERE name = @name";
+                command.Parameters.AddWithValue("@name", service.ServiceName);
+                var serviceId = await command.ExecuteScalarAsync();
+                if (serviceId is null)
+                    throw new NotFoundException($"Service {service.ServiceName} not found.");
+
                 command.Parameters.Clear();
-                command.CommandText = 
-                    @"INSERT INTO Rental_Item
-                        VALUES(@IdRental, @MovieId, @RentalPrice);";
-        
-                command.Parameters.AddWithValue("@IdRental", rentalRequest.Id);
-                command.Parameters.AddWithValue("@MovieId", movieId);
-                command.Parameters.AddWithValue("@RentalPrice", movie.RentalPrice);
+                command.CommandText = "INSERT INTO Appointment_Service VALUES (@aid, @sid, @fee)";
+                command.Parameters.AddWithValue("@aid", dto.AppoitmentId);
+                command.Parameters.AddWithValue("@sid", serviceId);
+                command.Parameters.AddWithValue("@fee", service.ServiceFee);
                 
                 await command.ExecuteNonQueryAsync();
             }
-            
+
             await transaction.CommitAsync();
         }
-        catch (Exception e)
+        catch(Exception e)
         {
             await transaction.RollbackAsync();
             throw;
         }
-        
-
     }
 }
