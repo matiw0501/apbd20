@@ -34,7 +34,7 @@ public class AppointmentsController : ControllerBase
     public async Task<IActionResult> AddAppointment(CreateAppointmentDto dto)
     {
         if (!dto.Services.Any())
-            return BadRequest("At least one service is required.");
+            return BadRequest("One service is required.");
 
         try
         {
