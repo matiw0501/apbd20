@@ -1,4 +1,5 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using System.Runtime.InteropServices.JavaScript;
+using Microsoft.Data.SqlClient;
 using Tutorial8.Models.DTOs;
 
 namespace Tutorial8.Services;
@@ -150,9 +151,72 @@ public class TripsService : ITripsService
 
     }
 
+    public async Task RegisterClientOnTrip(int clientId, int tripId)
+    {
+        await using var conn = new SqlConnection(_connectionString) ;
+        await conn.OpenAsync();
+        
+        var checkClientQuery =new SqlCommand("SELECT 1 FROM Client WHERE IdClient = @id", conn);
+        checkClientQuery.Parameters.AddWithValue("@id", clientId);
+        if (await checkClientQuery.ExecuteScalarAsync() == DBNull.Value)
+        {
+            throw new Exception("Client not found");
+        }
+        
+        var checkTripQuery = new SqlCommand("SELECT 1 FROM Trip WHERE IdTrip = @id", conn);
+        checkTripQuery.Parameters.AddWithValue("@id", tripId);
+        if (await checkTripQuery.ExecuteScalarAsync() == DBNull.Value)
+        {
+         throw new Exception("Trip not found");   
+        }
+        
+        var getMaxPeopleQuery = new SqlCommand("SELECT MaxPeople FROM Trip WHERE IdTrip = @id", conn);
+        getMaxPeopleQuery.Parameters.AddWithValue("@id", tripId);
+        var maxPeople =(int) await getMaxPeopleQuery.ExecuteScalarAsync();
+        
+        var countPeopleForTripQuery = new SqlCommand("SELECT count(*) FROM Client_Trip WHERE IdTrip = @id", conn);
+        countPeopleForTripQuery.Parameters.AddWithValue("@id", tripId);
+        var countedPeople = (int?) await countPeopleForTripQuery.ExecuteScalarAsync();
+        if (countedPeople >= maxPeople)
+        {
+            throw new Exception("Max people exceeded");
+        }
 
+        var insertCommand = new SqlCommand("INSERT INTO Client_Trip (IdClient, IdTrip, RegisteredAt) VALUES (@idC, @idT, @registeredAt)", conn);
+        var time = DateTime.Now.Date;
+        insertCommand.Parameters.AddWithValue("@idC", clientId);
+        insertCommand.Parameters.AddWithValue("@idT", tripId);
+        insertCommand.Parameters.AddWithValue("@registeredAt", Int32.Parse(time.ToString("yyyyMMdd")));
+        await insertCommand.ExecuteNonQueryAsync();
+    }
 
+    public async Task DeleteRegistration(int clientId, int tripId)
+    {
+        await using var conn = new SqlConnection(_connectionString);
+        await conn.OpenAsync();
+        
+        var clientTripQuery = new SqlCommand("SELECT 1 FROM Client_Trip WHERE IdClient = @idC AND IdTrip = @idT", conn);
+        clientTripQuery.Parameters.AddWithValue("@idC", clientId);
+        clientTripQuery.Parameters.AddWithValue("@idT", tripId);
+        
+        var check = await clientTripQuery.ExecuteScalarAsync();
+        if (check == null)
+        {
+            throw new Exception("Registration not found");
+        }
+        
+        var deleteCommand = new SqlCommand("DELETE FROM Client_Trip WHERE IdClient = @idC AND IdTrip  = @idT", conn);
+        deleteCommand.Parameters.AddWithValue("@idC", clientId);
+        deleteCommand.Parameters.AddWithValue("@idT", tripId);
+        await deleteCommand.ExecuteNonQueryAsync();
+        
+    }
+    
+    
 }
+
+
+
 
 public class ClientAlreadyExistsException : Exception
 {

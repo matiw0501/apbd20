@@ -51,6 +51,35 @@ namespace Tutorial8.Controllers
                 return Conflict(new { message = ex.Message });
             }
         }
-        
+
+
+        [HttpPut("/api/clients/{clientId}/trips/{tripId}")]
+        public async Task<IActionResult> RegisterClientOnTrip(int clientId, int tripId)
+        {
+            try
+            {
+                await _tripsService.RegisterClientOnTrip(clientId, tripId);
+                return NoContent();
+            }
+            catch (Exception e)
+            {
+                return BadRequest(new { message = e.Message });
+            }
+        }
+
+        [HttpDelete("/api/clients/{clientId}/trips/{tripId}")]
+        public async Task<IActionResult> DeleteClient(int clientId, int tripId)
+        {
+            try
+            {
+                await _tripsService.DeleteRegistration(clientId, tripId);
+                return Ok();
+            }
+            catch (Exception e)
+            {
+                return NotFound(new { message = e.Message });
+            }
+        }
+
     }
 }
