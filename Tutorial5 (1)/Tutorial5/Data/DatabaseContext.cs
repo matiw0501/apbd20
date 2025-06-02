@@ -80,13 +80,13 @@ public class DatabaseContext : DbContext
         modelBuilder.Entity<Prescription>()
             .HasOne(p => p.Patient)
             .WithMany(pa => pa.Prescriptions)
-            .HasForeignKey(p => p.PatientId);
+            .HasForeignKey(p => p.IdPatient);
 
         
         modelBuilder.Entity<Prescription>()
             .HasOne(p => p.Doctor)
             .WithMany()
-            .HasForeignKey(p => p.DoctorId);
+            .HasForeignKey(p => p.IdDoctor);
         
        
          modelBuilder.Entity<Doctor>().HasData(
@@ -111,16 +111,16 @@ public class DatabaseContext : DbContext
                 IdPrescription = 1,
                 Date = new DateTime(2024, 1, 1),
                 DueDate = new DateTime(2024, 1, 14),
-                PatientId = 1,
-                DoctorId = 1
+                IdPatient = 1,
+                IdDoctor = 1
             },
             new Prescription
             {
                 IdPrescription = 2,
                 Date = new DateTime(2024, 2, 10),
                 DueDate = new DateTime(2024, 2, 20),
-                PatientId = 2,
-                DoctorId = 2
+                IdPatient = 2,
+                IdDoctor = 2
             }
         );
 

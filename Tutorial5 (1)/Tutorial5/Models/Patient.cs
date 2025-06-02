@@ -7,6 +7,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 public class Patient
 {
     [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int IdPatient { get; set; }
     
     [Required]

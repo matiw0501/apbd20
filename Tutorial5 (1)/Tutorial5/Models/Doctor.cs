@@ -19,5 +19,7 @@ public class Doctor
     
     [StringLength(100)]
     public string Email { get; set; }
-    
+
+    public ICollection<Prescription> Prescriptions { get; set; }
+
 }
