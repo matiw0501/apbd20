@@ -1,10 +1,10 @@
-﻿using Humanizer;
+﻿
 using Microsoft.EntityFrameworkCore;
-using Tutorial5.Data;
-using Tutorial5.DTOs;
-using Tutorial5.Models;
+using Tutorial11.Data;
+using Tutorial11.DTOs;
+using Tutorial11.Models;
 
-namespace Tutorial5.Services;
+namespace Tutorial11.Services;
 
 public class DbService : IDbService
 {
@@ -28,8 +28,13 @@ public class DbService : IDbService
         }).ToListAsync();
         return books;
     }
-    
-    public async  Task<Prescription> AddPrescriptionMedicament(PrescriptionMedicamentDTO prescriptionMedicamentDto)
+
+    public async Task <int?> AddPrescription(PrescriptionMedicament prescription)
+    {
+        return 1;
+    }
+
+    public async Task <int?> AddPrescriptionMedicament(PrescriptionMedicamentDTO prescriptionMedicamentDto)
     {
         if (prescriptionMedicamentDto.Medicaments.Count > 10 || prescriptionMedicamentDto.Medicaments.Count < 1)
             throw new InvalidDataException("bad amount of Medicaments. Must be beetwen 1 and 10");
@@ -82,7 +87,7 @@ public class DbService : IDbService
 
             _context.Prescriptions.Add(prescription);
             await _context.SaveChangesAsync();
-            return prescription;
+            return prescription.IdPrescription;
         }
         catch (Exception e)
         {

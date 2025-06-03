@@ -1,12 +1,12 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Tutorial5.Data;
-using Tutorial5.DTOs;
-using Tutorial5.Models;
-using Tutorial5.Services;
+using Tutorial11.Data;
+using Tutorial11.DTOs;
+using Tutorial11.Models;
+using Tutorial11.Services;
 
-namespace Tutorial5.Controllers;
+namespace Tutorial11.Controllers;
 [Route("api/prescriptions")]
 [ApiController]
 
