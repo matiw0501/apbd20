@@ -1,0 +1,6 @@
+@Probny2025ZRozwiazaniem_HostAddress = http://localhost:5218
+
+GET {{Probny2025ZRozwiazaniem_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
