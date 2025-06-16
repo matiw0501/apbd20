@@ -166,6 +166,62 @@ namespace Probny2025ZRozwiazaniem.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Probny2025ZRozwiazaniem.Models.ProductsOrdered", b =>
+                {
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Amount")
+                        .HasColumnType("int");
+
+                    b.HasKey("ProductId", "OrderId");
+
+                    b.HasIndex("OrderId");
+
+                    b.ToTable("ProductsOrdereds");
+
+                    b.HasData(
+                        new
+                        {
+                            ProductId = 1,
+                            OrderId = 1,
+                            Amount = 3
+                        },
+                        new
+                        {
+                            ProductId = 1,
+                            OrderId = 2,
+                            Amount = 4
+                        },
+                        new
+                        {
+                            ProductId = 3,
+                            OrderId = 3,
+                            Amount = 5
+                        },
+                        new
+                        {
+                            ProductId = 1,
+                            OrderId = 3,
+                            Amount = 6
+                        },
+                        new
+                        {
+                            ProductId = 2,
+                            OrderId = 2,
+                            Amount = 7
+                        },
+                        new
+                        {
+                            ProductId = 2,
+                            OrderId = 3,
+                            Amount = 9
+                        });
+                });
+
             modelBuilder.Entity("Probny2025ZRozwiazaniem.Models.Status", b =>
                 {
                     b.Property<int>("StatusId")
@@ -204,13 +260,13 @@ namespace Probny2025ZRozwiazaniem.Migrations
             modelBuilder.Entity("Probny2025ZRozwiazaniem.Models.Orders", b =>
                 {
                     b.HasOne("Probny2025ZRozwiazaniem.Models.Client", "Client")
-                        .WithMany()
+                        .WithMany("Orders")
                         .HasForeignKey("ClientId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("Probny2025ZRozwiazaniem.Models.Status", "Status")
-                        .WithMany()
+                        .WithMany("Orders")
                         .HasForeignKey("StatusId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -218,6 +274,45 @@ namespace Probny2025ZRozwiazaniem.Migrations
                     b.Navigation("Client");
 
                     b.Navigation("Status");
+                });
+
+            modelBuilder.Entity("Probny2025ZRozwiazaniem.Models.ProductsOrdered", b =>
+                {
+                    b.HasOne("Probny2025ZRozwiazaniem.Models.Orders", "Orders")
+                        .WithMany("ProductsOrdereds")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Probny2025ZRozwiazaniem.Models.Product", "Product")
+                        .WithMany("ProductsOrdereds")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Orders");
+
+                    b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("Probny2025ZRozwiazaniem.Models.Client", b =>
+                {
+                    b.Navigation("Orders");
+                });
+
+            modelBuilder.Entity("Probny2025ZRozwiazaniem.Models.Orders", b =>
+                {
+                    b.Navigation("ProductsOrdereds");
+                });
+
+            modelBuilder.Entity("Probny2025ZRozwiazaniem.Models.Product", b =>
+                {
+                    b.Navigation("ProductsOrdereds");
+                });
+
+            modelBuilder.Entity("Probny2025ZRozwiazaniem.Models.Status", b =>
+                {
+                    b.Navigation("Orders");
                 });
 #pragma warning restore 612, 618
         }

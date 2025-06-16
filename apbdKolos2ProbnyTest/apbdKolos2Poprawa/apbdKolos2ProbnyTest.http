@@ -1,0 +1,6 @@
+@apbdKolos2ProbnyTest_HostAddress = http://localhost:5228
+
+GET {{apbdKolos2ProbnyTest_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

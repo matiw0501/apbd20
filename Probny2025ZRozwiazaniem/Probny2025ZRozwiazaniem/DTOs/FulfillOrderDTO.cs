@@ -2,5 +2,5 @@
 
 public class FulfillOrderDTO
 {
-    
+    public string StatusName { get; set; } = null!;
 }

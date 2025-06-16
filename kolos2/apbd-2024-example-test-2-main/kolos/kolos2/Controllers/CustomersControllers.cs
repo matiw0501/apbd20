@@ -16,6 +16,6 @@ public class CustomersControllers :ControllerBase
     }
     
     
-    [HttpGet("{id}/purchases")]
+   
     
 }

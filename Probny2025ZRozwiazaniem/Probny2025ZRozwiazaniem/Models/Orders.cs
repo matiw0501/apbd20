@@ -13,10 +13,14 @@ public class Orders
     
     [ForeignKey(nameof(Client))]
     public int ClientId { get; set; }
-    public Client Client { get; set; }
+
+    public Client Client { get; set; } = null!;
 
 
     [ForeignKey(nameof(Status))]
     public int StatusId { get; set; }
-    public Status Status { get; set; }
+
+    public Status Status { get; set; } = null!;
+
+    public ICollection<ProductsOrdered> ProductsOrdereds { get; set; } = null!;
 }

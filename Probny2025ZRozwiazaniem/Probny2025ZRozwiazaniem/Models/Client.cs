@@ -13,4 +13,6 @@ public class Client
     [Required]
     [MaxLength(100)]
     public string LastName { get; set; }
+    
+    public ICollection<Orders> Orders { get; set; } = null!;
 }

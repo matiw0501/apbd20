@@ -15,4 +15,6 @@ public class Product
     [Column(TypeName = "decimal")]
     [Precision(10,2)]
     public double Price { get; set; }
+    
+    public ICollection<ProductsOrdered> ProductsOrdereds { get; set; } = null!;
 }
