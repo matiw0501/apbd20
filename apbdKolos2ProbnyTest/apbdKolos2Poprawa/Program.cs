@@ -1,4 +1,5 @@
 using apbdKolos2ProbnyTest.Database;
+using apbdKolos2ProbnyTest.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
